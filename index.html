@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>three.js webgl - FBX loader</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link type="text/css" rel="stylesheet" href="main.css">
+</head>
+
+<body>
+    <div id="info">
+        <a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> - <a href="https://www.mlit.go.jp/plateau/">Plateau</a> FBX Example<br />
+        
+    </div>
+
+    <!-- Import maps polyfill -->
+    <!-- Remove this when import maps will be widely supported -->
+    <script async src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"></script>
+
+    <script type="importmap">
+			{
+				"imports": {
+					"three": "https://unpkg.com/three@0.142.0/build/three.module.js",
+                    "three/addons/": "https://unpkg.com/three@0.142.0/examples/jsm/"
+				}
+			}
+		</script>
+
+    <script type="module">
+
+        import * as THREE from 'three';
+
+        import Stats from 'three/addons/libs/stats.module.js';
+
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+
+
+
+        let camera, scene, renderer, stats;
+
+        const clock = new THREE.Clock();
+
+        let mixer;
+
+        init();
+        animate();
+
+        function init() {
+            //initiaraize here
+            //シーンの初期化ここから
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 2000);
+            camera.position.set(100, 200, 300);
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xa0a0a0);
+            scene.fog = new THREE.Fog(0xa0a0a0, 200, 1000);
+
+            const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444);
+            hemiLight.position.set(0, 200, 0);
+            scene.add(hemiLight);
+
+            const dirLight = new THREE.DirectionalLight(0xffffff);
+            dirLight.position.set(0, 200, 100);
+            dirLight.castShadow = true;
+            dirLight.shadow.camera.top = 180;
+            dirLight.shadow.camera.bottom = - 100;
+            dirLight.shadow.camera.left = - 120;
+            dirLight.shadow.camera.right = 120;
+            scene.add(dirLight);
+            //initialize end
+            //初期化ここまで
+            
+
+            // model loading
+            // モデルの読み込みここから
+            const loader = new FBXLoader();
+            const lod1Example = 'models/53392546_bldg_6677.fbx';
+            const lod2Example = 'models/53392633_bldg_6677.fbx';
+            const alterMaterialColor = 0x90D7EC;
+            
+            loader.load(lod2Example, function (obj) {
+                let maxX = -Infinity;
+                let minX = Infinity;
+                let maxY = -Infinity;
+                let minY = Infinity;
+              
+                let checked = {};
+                
+                function traverser(child) {
+                    if (checked[child.id] === true) {
+                        return;
+
+                    }
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                    checked[child.id] = true;
+                    if (child.isMesh !== true) {
+                        return child.traverse(traverser)
+
+                    }
+
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                    child.geometry.computeVertexNormals() 
+                    if (!child.material.map) {
+                        child.material = new THREE.MeshToonMaterial({ color:alterMaterialColor })
+                    }
+
+
+
+                    
+                    const posision = child.geometry.attributes.position
+                    for (let index = 0; index < posision.count; index++) {
+                        const x = posision.getX(index)
+                        if (x > maxX) {
+                            maxX = x;
+                        }
+                        else if (x < minX) {
+                            minX = x
+                        }
+                        const y = posision.getY(index)
+                        if (y > maxY) {
+                            maxY = y;
+                        }
+                        else if (y < minY) {
+                            minY = y
+                        }
+
+                       
+
+                    }
+                };
+                obj.traverse(traverser);
+                const centerX = (maxX + minX) / -2
+                const centerY = (maxY + minY) / -2;
+                
+                obj.position.set(centerX, centerY, 0);
+                
+
+
+            
+                scene.add(obj);
+
+            });
+            //model load end
+            //モデルの読み込みここまで
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            container.appendChild(renderer.domElement);
+
+            const controls = new OrbitControls(camera, renderer.domElement);
+            controls.target.set(0, 100, 0);
+            controls.update();
+
+            window.addEventListener('resize', onWindowResize);
+
+            // stats
+            stats = new Stats();
+            container.appendChild(stats.dom);
+
+        }
+
+        function onWindowResize() {
+
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+
+            renderer.setSize(window.innerWidth, window.innerHeight);
+
+        }
+
+        //
+
+        function animate() {
+
+            requestAnimationFrame(animate);
+
+            const delta = clock.getDelta();
+
+            if (mixer) mixer.update(delta);
+
+            renderer.render(scene, camera);
+
+            stats.update();
+
+        }
+
+    </script>
+
+</body>
+
+</html>
