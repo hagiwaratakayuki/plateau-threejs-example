@@ -2,6 +2,10 @@
 
 [Plateau](https://www.mlit.go.jp/plateau/ "Plateau")のモデルをthree.jsで表示するサンプルです。
 
+## コード解説
+
+[こちら](https://kagigotonet.hatenablog.com/entry/2022/12/25/200848)です
+
 ##　動作環境
 
 ローカルで動作させる場合[node.js](https://nodejs.org/ "node.js")が必要です
