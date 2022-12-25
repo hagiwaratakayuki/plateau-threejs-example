@@ -114,16 +114,16 @@
 
 
                     
-                    const posision = child.geometry.attributes.position
-                    for (let index = 0; index < posision.count; index++) {
-                        const x = posision.getX(index)
+                    const position = child.geometry.attributes.position
+                    for (let index = 0; index < position.count; index++) {
+                        const x = position.getX(index)
                         if (x > maxX) {
                             maxX = x;
                         }
                         else if (x < minX) {
                             minX = x
                         }
-                        const y = posision.getY(index)
+                        const y = position.getY(index)
                         if (y > maxY) {
                             maxY = y;
                         }
